@@ -1,0 +1,42 @@
+####Load package####
+
+library(powerMediation)
+library(dplyr)
+library(ggplot2)
+library(svglite)
+
+####Create sequence for sample size####
+
+power_list = sequence(10000,1,1)
+power_i <- numeric()
+vector <- numeric()
+
+for (x in power_list)
+  
+{
+power_i <- powerLogisticBin(n = x, p1 = 0.5, p2 = 0.58, B = 1/2, alpha = 0.05/(16)) #assume comparison of all treatment arms against control, 
+        #categories against each other 
+vector <- c(vector,power_i)
+} #assume baseline effect 0.5, treatment 0.58
+
+####Append sample size to data frame####
+
+power_data <- as.data.frame(t(rbind(power_list,vector)))
+
+####Plot power curve####
+
+svglite("PowerProp.svg", width=6, height=5)
+
+ggplot(data=power_data, aes(x=power_list, y=vector, group=1)) +
+  geom_line(color="navy", linewidth = 1) +
+  geom_point(color="navy", size = 1) +
+  xlab("Sample size (n)") + ylab("Power")+
+  theme(axis.title.x = element_text(size=14, face="bold"),
+        axis.title.y = element_text(size=14, face="bold"))+
+  geom_hline(yintercept=0.8, 
+             color = "#00003320", size=2)+
+  scale_color_manual(values = c("black", "navy"))+
+  scale_y_continuous(limits=c(0, 1.05))+
+  scale_x_continuous(labels = (function(x) x * 3),limits = c(0,5500))
+
+dev.off()
